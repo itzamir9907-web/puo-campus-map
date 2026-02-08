@@ -170,6 +170,21 @@ body.dark .toggle:hover {
   margin-bottom: 10px;
   opacity: 0.8;
 }
+.qr-code {
+position: fixed;
+bottom: 15px;
+right: 15px;
+background: white;
+padding: 8px;
+border-radius: 10px;
+box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+z-index: 9999;
+}
+
+.qr-code img {
+  width: 90px;
+  height: 90px;
+}
 </style>
 </head>
 
@@ -723,7 +738,10 @@ Diploma in Information Technology
 </div>
 
 </div>
-
+</div>
+<div class="qr-code">
+<img src="c:\Users\Amir\Documents\.vscode\qrcode_307513820_02e569847e470823f5d74c380b2c1175.png">
+</div>
 <script>
 let currentCategory = "all";
 
@@ -786,3 +804,4 @@ if (localStorage.getItem("darkMode") === "true") {
 
 </body>
 </html>
+
