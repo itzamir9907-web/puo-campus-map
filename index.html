@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PUO Interactive Campus Map</title>
+
+<style>
+/* ===== COLOR VARIABLES ===== */
+:root {
+  --bg: #ffffff;
+  --text: #000000;
+  --sidebar: #f4f4f4;
+  --card: #ffffff;
+  --border: #cccccc;
+  --hover: #dbeafe;
+  --active: #93c5fd;
+}
+
+body.dark {
+  --bg: #111827;
+  --text: #f9fafb;
+  --sidebar: #1f2937;
+  --card: #111827;
+  --border: #374151;
+  --hover: #1e40af;
+  --active: #2563eb;
+}
+
+/* ===== BASE ===== */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+h2 {
+  text-align: center;
+  margin: 10px;
+}
+
+/* LAYOUT */
+.container {
+  display: flex;
+  height: 90vh;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 330px;
+  background: var(--sidebar);
+  padding: 15px;
+  overflow-y: auto;
+  border-right: 1px solid var(--border);
+}
+
+.sidebar h3 {
+  margin-top: 10px;
+}
+
+/* SCROLLBAR */
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+.sidebar::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 5px;
+}
+
+/* BUTTON */
+.toggle {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: var(--card);
+  color: var(--text);
+  font-weight: bold;
+}
+
+
+/* SEARCH */
+#searchBox {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+}
+
+/* FILTERS */
+.filters button {
+  padding: 6px 10px;
+  margin: 3px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  background: var(--card);
+  color: var(--text);
+}
+
+.filters button:hover {
+  background: var(--hover);
+}
+
+/* LOCATION */
+.location {
+  display: block;
+  padding: 10px;
+  margin-bottom: 8px;
+  background: var(--card);
+  border-radius: 6px;
+  text-decoration: none;
+  color: var(--text);
+  font-weight: bold;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.location:hover {
+  background: var(--hover);
+  transform: translateX(4px);
+}
+
+.location.active {
+  background: var(--active);
+  color: white;
+}
+
+/* MAP */
+.map-container {
+  flex: 1;
+}
+
+iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* TEAM */
+.team-section {
+  margin-top: 20px;
+}
+
+.member {
+  background: var(--card);
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    height: 45%;
+  }
+}
+body.dark .filters button:hover,
+body.dark .toggle:hover {
+  background: var(--hover);
+  color: white;
+}
+#resultCount {
+  font-size: 13px;
+  margin-bottom: 10px;
+  opacity: 0.8;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Politeknik Ungku Omar – Interactive Campus Map</h2>
+
+<div class="container">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+
+<h3>Find a Location</h3>
+
+<button class="toggle" onclick="toggleDark()">🌙 Toggle Dark Mode</button>
+
+<input type="text" id="searchBox" placeholder="Search location..." onkeyup="filterLocations()">
+<p id="resultCount">Showing all locations</p>
+<div class="filters">
+  <button onclick="filterCategory('all')">All</button>
+  <button onclick="filterCategory('academic')">Academic</button>
+  <button onclick="filterCategory('admin')">Admin</button>
+  <button onclick="filterCategory('hostel')">Hostel</button>
+  <button onclick="filterCategory('food')">Food/Shop</button>
+  <button onclick="filterCategory('mosque')">Mosque/Islamic</button>
+  <button onclick="filterCategory('hall')">Hall/Square</button>
+  <button onclick="filterCategory('parking')">Student Parking</button>
+  <button onclick="filterCategory('oku')">OKU</button>
+  <button onclick="filterCategory('sports')">Sports</button>
+  <button onclick="filterCategory('others')">Others</button>
+</div>
+
+
+
+<a class="location academic" href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58642,101.12224&z=25" target="map" onclick="activate(this)">
+⚡ Department of Electrical Engineering
+</a>
+<a class="location academic"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58711,101.1221&z=25"
+       target="map">
+      💻 Department of Information Technology and Communication
+    </a>
+<a class="location academic"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58812,101.12585&z=25"
+       target="map">
+      🔨 Department of Civil Engineering(Campus A)
+    </a>
+    <a class="location academic"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58719,101.12316&z=25"
+       target="map">
+      ⚓ Department of Marine Engineering
+    </a>
+    <a class="location academic"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.59152,101.12281&z=25"
+       target="map">
+      📚 Department of General Studies(Campus B)
+    </a>
+    <a class="location academic"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.59178,101.12301&z=25"
+       target="map">
+      💼 Department of Commerce
+    </a>
+    <a class="location academic"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58872,101.12525&z=25"
+       target="map">
+      🧮 Department of Mathematics, Science and Computer(JMSK)
+    </a>
+    <a class="location academic"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58872,101.12525&z=25"
+       target="map">
+      📗 Dataran Ilmu
+    </a>
+    <a class="location academic"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.5919,101.12234&z=25"
+       target="map">
+      🖥️ Apps 1/Apps 2
+    </a>
+    <a class="location academic"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.59094,101.12252&z=25"
+       target="map">
+      ✏️ Seni Bina
+    </a>
+    <a class="location academic"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.59054,101.12307&z=25"
+       target="map">
+      📚 Department of General Studies
+    </a>
+    <a class="location academic"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58806,101.1242&z=25"
+       target="map">
+      🏗️ Civil Engineering Department Workshop
+    </a>
+    <a class="location academic"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58861,101.12325&z=25"
+       target="map">
+      🧰 Department of Mechanical Engineering
+    </a>
+    <a class="location academic"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58828,101.12352&z=25"
+       target="map">
+      🏗️ Department of Civil Engineering
+    </a>
+    <a class="location academic"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.59068,101.12248&z=25"
+       target="map">
+      ⚒️ PERAK ARCHITECTURAL HERITAGE TECHNOLOGY STUDIES (PAHAT)
+    </a>
+    <a class="location academic"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.59059,101.12259&z=25"
+       target="map">
+      🧰 Material library
+    </a>
+    
+
+<a class="location admin"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58918,101.12552&z=25"
+       target="map">
+      🔎 Research, Innovation and Commercialization Unit (UPIK)
+    </a>
+    <a class="location admin"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.5883,101.12263&z=25"
+       target="map">
+      🏟️ Headquarters of Mathematics, Science and Computer(JMSK)
+    </a>
+    <a class="location admin"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.59,101.12278&z=25"
+       target="map">
+      🏟️ Department of Sports, Co-Curriculum and Culture (JSKK)
+    </a>
+    <a class="location admin"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58837,101.12539&z=25"
+       target="map">
+      🏢 Administration Department
+    </a>
+    <a class="location admin"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58924,101.12563&z=25"
+       target="map">
+      🏢 Corporate, Industrial, Services and Employability Center (CISEC)
+    </a>
+    <a class="location admin"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58813,101.12567&z=25"
+       target="map">
+      🏬 Student Affairs Department (JHEP)
+    </a>
+    <a class="location admin"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58809,101.12217&z=25"
+       target="map">
+      ⛑️ Development and Maintenance Unit (UPS)
+    </a>
+    <a class="location admin"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.59179,101.12292&z=25"
+       target="map">
+      📃 Ungku Omar Polytechnic (UPep) Assessment and Examination Unit
+    </a>
+
+    <a class="location hostel"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58912,101.12589&z=25"
+       target="map">
+      🏠 Anjung Premier
+    </a>
+    <a class="location hostel"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58941,101.12152&z=25"
+       target="map">
+      🏠 Kolej Kediaman PFI
+    </a>
+    <a class="location hostel"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58925,101.12139&z=25"
+       target="map">
+      🏠 Kamsis Delima PUO
+    </a>
+    <a class="location hostel"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58971,101.12107&z=25"
+       target="map">
+      🏠 Kamsis Zamrud PUO
+    </a>
+    <a class="location hostel"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.59026,101.12093&z=25"
+       target="map">
+      🏠 Kamsis Mutiara PUO
+    </a>
+    <a class="location hostel"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.59061,101.12126&z=25"
+       target="map">
+      🏠 Kamsis Emas PUO
+    </a>
+    <a class="location hostel"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.59083,101.12149&z=25"
+       target="map">
+      🏠 Kamsis Berlian PUO
+    </a>
+
+<a class="location food"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58863,101.12383&z=25"
+       target="map">
+      🛒 Koperasi Politeknik Ungku Omar Ipoh Bhd
+    </a>
+    <a class="location food"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.59018,101.12155&z=25"
+       target="map">
+      🛒 Koperasi Kamsis Baru
+    </a>
+    <a class="location food"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58786,101.12494&z=25"
+       target="map">
+      🍴 Kantin A (Kafe Kampus A)
+    </a>
+    <a class="location food"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58966,101.12301&z=25"
+       target="map">
+      🍔 Cafe JKE
+    </a>
+    <a class="location food"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.59008,101.12139&z=25"
+       target="map">
+      🍜 Cafe Kamsis Baru Puo
+    </a>
+    <a class="location food"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58757,101.1242&z=25"
+       target="map">
+      ☕ Dellamar Brownies & Coffee - TSOML
+    </a>
+    <a class="location food"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.59176,101.12237&z=25"
+       target="map">
+      🍩 PolyBizz Mall
+    </a>
+    <a class="location food"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.59096,101.12272&z=25"
+       target="map">
+      🍉 Kantin C
+    </a>
+    <a class="location food"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58874, 101.12177&z=25"
+       target="map">
+      🍈 Pasar Rabu
+    </a>
+
+    <a class="location mosque"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.59189,101.12265&z=25"
+       target="map">
+      ☪️ Surau Campus B
+    </a>
+    <a class="location mosque"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58863,101.1265&z=25"
+       target="map">
+      ☪️ PUSAT ISLAM (PUO)
+    </a>
+    <a class="location mosque"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58857,101.1217&z=25"
+       target="map">
+      ☪️ Surau PUO
+    </a>
+    <a class="location mosque"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.59168,101.12246&z=25"
+       target="map">
+      ☪️ Unit Zakat dan Wakaf
+    </a>
+
+<a class="location hall"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58799,101.12523&z=25"
+       target="map">
+      🏫 Dewan Warisan
+    </a>
+    <a class="location hall"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58751,101.12381&z=25"
+       target="map">
+      🏫 Perak Jubilee Hall
+    </a>
+    <a class="location hall"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.59105,101.12331&z=25"
+       target="map">
+      🏫 Dewan Seri Kinta
+    </a>
+    <a class="location hall"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58879,101.12568&z=25"
+       target="map">
+      🏫 Dewan Kuliah Campus A
+    </a>
+    <a class="location hall"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.59115,101.12306&z=25"
+       target="map">
+      🏫 Foundation Lecture Hall
+    </a>
+    <a class="location hall"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58794,101.12507&z=25"
+       target="map">
+      🏫 Dataran Premier
+    </a>
+
+    <a class="location parking"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58677,101.12245&z=25"
+       target="map">
+      🚗 Student Parking JKE
+    </a>
+    <a class="location parking"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58694,101.12151&z=25"
+       target="map">
+      🚗 Student Parking JTMK
+    </a>
+    <a class="location parking"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58782,101.12475&z=25"
+       target="map">
+      🚗 Student Parking Kantin A
+    </a>
+    <a class="location parking"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58905,101.1237&z=25"
+       target="map">
+      🚗 Student Parking Campus A
+    </a>
+    <a class="location parking"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.59023,101.12288&z=25"
+       target="map">
+      🚗 Student Parking Zon P
+    </a>
+     
+<a class="location oku"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.59042,101.12154&z=25"
+       target="map">
+      ♿ OKU Parking (Kamsis Baru)
+    </a>
+    <a class="location oku"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.59042,101.12154&z=25"
+       target="map">
+      ♿ OKU Parking(JSKK)
+    </a>
+    <a class="location oku"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.5872,101.12222&z=25"
+       target="map">
+      ♿ OKU Parking(JTMK)
+    </a>
+    <a class="location oku"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58638,101.12234&z=25"
+       target="map">
+      ♿ OKU Parking(JKE)
+    </a>
+    <a class="location oku"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58708,101.12289&z=25"
+       target="map">
+      ♿ OKU Parking(JP)
+    </a>
+    <a class="location oku"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58816,101.12291&z=25"
+       target="map">
+      ♿ OKU Parking(JMSK)
+    </a>
+    <a class="location oku"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58803,101.12511&z=25"
+       target="map">
+      ♿ OKU Parking(Dataran Premier)
+    </a>
+    <a class="location oku"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58867,101.12561&z=25"
+       target="map">
+      ♿ OKU Parking(Dewan Kuliah Campus A)
+    </a>
+    <a class="location oku"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58899,101.12592&z=25"
+       target="map">
+      ♿ OKU Parking(Anjung Premier)
+    </a>
+    <a class="location oku"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.592,101.1228&z=25"
+       target="map">
+      ♿ OKU Parking(Campus B)
+    </a>
+    <a class="location oku"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.59092,101.12347&z=25"
+       target="map">
+      ♿ OKU Parking(Padang Campus B)
+    </a>
+    <a class="location oku"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58757,101.12366&z=25"
+       target="map">
+      ♿ OKU Parking (Perak Jubilee Hall)
+    </a>
+
+<a class="location sports"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58843,101.12419&z=25"
+       target="map">
+      🏀 Futsal Court Campus A
+    </a>
+    <a class="location sports"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58933,101.12266&z=25"
+       target="map">
+      🏀 Padang Campus A
+    </a>
+    <a class="location sports"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.59069,101.12392&z=25"
+       target="map">
+      🏀 Padang Campus B
+    </a>
+    <a class="location sports"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.59004,101.12061&z=25"
+       target="map">
+      🏀 Kamsis PFI's Futsal Court
+    </a>
+
+    <a class="location others"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58759,101.1244&z=25"
+       target="map">
+      📚 PUO Library
+    </a>
+    <a class="location others"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.59145,101.12171&z=25"
+       target="map">
+      🏪 Kedai Dobi Koperasi PUO
+    </a>
+    <a class="location others"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58945,101.12356&z=25"
+       target="map">
+      🪖 Wataniah
+    </a>
+    <a class="location others"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.5917,101.12189&z=25"
+       target="map">
+      🖨️ Printer and Photostat Shop
+    </a>
+    <a class="location others"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.59206,101.1227&z=25"
+       target="map">
+      📦 Parcel/Package Pickup Facility
+    </a>
+    <a class="location others"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.58743,101.12493&z=25"
+       target="map">
+      🏪 Galeria PUO
+    </a>
+    <a class="location others"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.5903,101.12309&z=25"
+       target="map">
+      🚌 Bus Parking Station
+    </a>
+    <a class="location others"
+       onclick="activate(this)"
+       href="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0&ll=4.5895,101.12148&z=25"
+       target="map">
+      🛡️ Security and Safety Unit PUO
+    </a>
+
+<!-- TEAM -->
+<div class="team-section">
+<h3>👥 Project Team</h3>
+
+<div class="member">
+<strong>Amir Aspar(F1230)</strong><br>
+Lead Developer / Mapper
+Diploma in Information Technology
+</div>
+
+<div class="member">
+<strong>Avinaash(F1083)</strong><br>
+Photographer
+Diploma in Information Technology
+</div>
+
+<div class="member">
+<strong>Azri(F1272)</strong><br>
+Data Verifier
+Diploma in Information Technology
+</div>
+
+<div class="member">
+<strong>Ammar(F1193)</strong><br>
+Documentation
+Diploma in Information Technology
+</div>
+</div>
+</div>
+
+
+<!-- MAP -->
+<div class="map-container">
+<iframe name="map" src="https://www.google.com/maps/d/u/2/embed?mid=1D5n8bUE7H-x77fx0rQpTuWXcmEAqte0"></iframe>
+</div>
+
+</div>
+
+<script>
+let currentCategory = "all";
+
+/* SEARCH + CATEGORY FILTER */
+function filterLocations() {
+  const input = document.getElementById("searchBox").value.toLowerCase();
+  let count = 0;
+
+  document.querySelectorAll(".location").forEach(loc => {
+    const matchText = loc.innerText.toLowerCase().includes(input);
+    const matchCategory =
+      currentCategory === "all" || loc.classList.contains(currentCategory);
+
+    if (matchText && matchCategory) {
+      loc.style.display = "block";
+      count++;
+    } else {
+      loc.style.display = "none";
+    }
+  });
+
+  document.getElementById("resultCount").innerText =
+    count + " location(s) found";
+}
+
+/* CATEGORY BUTTON */
+function filterCategory(category) {
+  currentCategory = category;
+  filterLocations();
+}
+
+/* ACTIVE LOCATION */
+function activate(el) {
+  document.querySelectorAll(".location").forEach(l =>
+    l.classList.remove("active")
+  );
+  el.classList.add("active");
+
+  /* Hide sidebar on mobile */
+  if (window.innerWidth < 768) {
+    document.querySelector(".sidebar").style.display = "none";
+  }
+}
+
+/* DARK MODE */
+function toggleDark() {
+  document.body.classList.toggle("dark");
+  localStorage.setItem(
+    "darkMode",
+    document.body.classList.contains("dark")
+  );
+}
+
+/* LOAD DARK MODE */
+if (localStorage.getItem("darkMode") === "true") {
+  document.body.classList.add("dark");
+}
+</script>
+
+
+</body>
+</html>
