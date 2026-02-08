@@ -171,19 +171,64 @@ body.dark .toggle:hover {
   opacity: 0.8;
 }
 .qr-code {
-position: fixed;
-bottom: 15px;
-right: 15px;
-background: white;
-padding: 8px;
-border-radius: 10px;
-box-shadow: 0 4px 10px rgba(0,0,0,0.25);
-z-index: 9999;
+  position: fixed;
+  bottom: 15px;
+  right: 15px;
+  background: white;
+  padding: 8px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+  z-index: 9999;
 }
 
 .qr-code img {
   width: 90px;
   height: 90px;
+}
+/* COLLAPSIBLE SIDEBAR */
+.container.collapsed .sidebar {
+  width: 0;
+  padding: 0;
+  overflow: hidden;
+  border: none;
+}
+
+.container.collapsed .map-container {
+  flex: 1 1 100%;
+}
+
+/* Collapse Button */
+.collapse-btn {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: var(--card);
+  color: var(--text);
+  font-weight: bold;
+}
+/* Floating Collapse Button */
+.floating-toggle {
+  position: fixed;
+  top: 80px;
+  left: 340px; /* when sidebar is open */
+  z-index: 1000;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  background: var(--card);
+  color: var(--text);
+  font-weight: bold;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  transition: left 0.3s ease;
+}
+
+/* Move button to LEFT EDGE when sidebar collapsed */
+.container.collapsed + .floating-toggle {
+  left: 10px;
 }
 </style>
 </head>
@@ -200,6 +245,7 @@ z-index: 9999;
 <h3>Find a Location</h3>
 
 <button class="toggle" onclick="toggleDark()">🌙 Toggle Dark Mode</button>
+<button class="floating-toggle" onclick="toggleSidebar()">☰</button>
 
 <input type="text" id="searchBox" placeholder="Search location..." onkeyup="filterLocations()">
 <p id="resultCount">Showing all locations</p>
@@ -738,9 +784,8 @@ Diploma in Information Technology
 </div>
 
 </div>
-</div>
 <div class="qr-code">
-<img src="qrcode_307513820_02e569847e470823f5d74c380b2c1175.png">
+<img src="c:\Users\Amir\Documents\.vscode\qrcode_307513820_02e569847e470823f5d74c380b2c1175.png">
 </div>
 <script>
 let currentCategory = "all";
@@ -799,6 +844,15 @@ function toggleDark() {
 if (localStorage.getItem("darkMode") === "true") {
   document.body.classList.add("dark");
 }
+function toggleSidebar() {
+  const container = document.querySelector(".container");
+  const btn = document.querySelector(".floating-toggle");
+
+  container.classList.toggle("collapsed");
+
+  btn.innerText = container.classList.contains("collapsed") ? "▶" : "☰";
+}
+
 </script>
 
 
